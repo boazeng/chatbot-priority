@@ -1,10 +1,11 @@
 {
   "name": "chatbot-priority",
   "version": "1.0.0",
+  "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "start": "next start",
+    "start": "next start -p $PORT",
     "lint": "next lint"
   },
   "keywords": [],
@@ -13,20 +14,23 @@
   "description": "",
   "dependencies": {
     "@supabase/supabase-js": "latest",
-    "@types/node": "latest",
-    "@types/nodemailer": "^6.4.17",
-    "@types/react": "latest",
-    "@types/react-dom": "latest",
-    "next": "latest",
-    "nodemailer": "^6.10.0",
-    "openai": "^4.28.0",
-    "react": "latest",
-    "react-dom": "latest",
-    "typescript": "latest"
+    "@types/node": "^20",
+    "@types/nodemailer": "^6.4.14",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "next": "14.1.0",
+    "nodemailer": "^6.9.9",
+    "openai": "^4.26.0",
+    "react": "^18",
+    "react-dom": "^18",
+    "typescript": "^5"
   },
   "devDependencies": {
-    "autoprefixer": "^10.4.14",
-    "postcss": "^8.4.31",
+    "autoprefixer": "^10.0.1",
+    "postcss": "^8",
     "tailwindcss": "^3.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
