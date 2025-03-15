@@ -12,7 +12,6 @@ const STAGE_MESSAGES = {
   [ConversationStage.GET_SITE_ADDRESS]: 'באיזה אתר נמצאת החניה?',
   [ConversationStage.GET_ISSUE_DESCRIPTION]: 'אנא תארו את התקלה',
   [ConversationStage.CHECK_SYSTEM_STATUS]: 'האם המתקן מושבת כתוצאה מהתקלה? (כן/לא)',
-  [ConversationStage.GET_EMAIL]: 'לאיזו כתובת מייל לשלוח את סיכום התקלה?',
   [ConversationStage.GET_MESSAGE]: 'אנא כתוב את הודעתך.',
   [ConversationStage.COMPLETED]: 'תודה על פנייתכם. הפרטים נקלטו במערכת ויטופלו בהקדם.'
 };
@@ -111,14 +110,6 @@ function validateInput(message: string, stage: ConversationStage): ValidationRes
       return {
         isValid: isValidStatus,
         error: 'אנא ענה "כן" או "לא" - האם המתקן מושבת?'
-      };
-
-    case ConversationStage.GET_EMAIL:
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isValidEmail = emailRegex.test(message);
-      return {
-        isValid: isValidEmail,
-        error: 'כתובת המייל אינה תקינה. אנא הזן כתובת מייל חוקית.'
       };
 
     default:
@@ -297,8 +288,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
          ConversationStage.GET_PHONE,
          ConversationStage.GET_SITE_ADDRESS, 
          ConversationStage.GET_ISSUE_DESCRIPTION,
-         ConversationStage.CHECK_SYSTEM_STATUS,
-         ConversationStage.GET_EMAIL].includes(currentState.stage)) {
+         ConversationStage.CHECK_SYSTEM_STATUS].includes(currentState.stage)) {
       const validationResult = validateInput(message, currentState.stage);
       if (!validationResult.isValid) {
         return res.status(200).json({
@@ -374,21 +364,8 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         }
         currentState = {
           ...currentState,
-          stage: ConversationStage.GET_EMAIL,
-          isSystemDisabled: lowerMessage === 'כן'
-        };
-        break;
-
-      case ConversationStage.GET_EMAIL:
-        const emailConfig: EmailConfig = {
-          to: message,
-          from: process.env.SMTP_FROM || 'no-reply@urbanparking.co.il',
-          subject: 'סיכום דיווח תקלה - חניה אורבנית'
-        };
-        currentState = {
-          ...currentState,
           stage: ConversationStage.COMPLETED,
-          emailConfig
+          isSystemDisabled: lowerMessage === 'כן'
         };
         break;
     }
@@ -397,17 +374,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     if (currentState.stage === ConversationStage.COMPLETED) {
       const summary = createSummary(currentState);
       
-      if (currentState.emailConfig) {
-        const emailSent = await sendEmail(currentState.emailConfig, summary);
-        if (!emailSent) {
-          return res.status(200).json({
-            response: 'אירעה שגיאה בשליחת המייל. אנא נסה שנית או צור קשר עם התמיכה.',
-            conversationState: {
-              ...currentState,
-              stage: ConversationStage.GET_EMAIL
-            }
-          });
-        }
+      const emailConfig: EmailConfig = {
+        to: 'boazen@gmail.com',
+        from: process.env.SMTP_FROM || 'no-reply@urbanparking.co.il',
+        subject: 'סיכום דיווח תקלה - חניה אורבנית'
+      };
+      
+      const emailSent = await sendEmail(emailConfig, summary);
+      if (!emailSent) {
+        console.error('שגיאה בשליחת המייל');
       }
 
       return res.status(200).json({
